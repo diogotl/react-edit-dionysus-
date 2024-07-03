@@ -4,23 +4,22 @@ import {
     ChevronRightIcon,
     ChevronDoubleLeftIcon,
     ChevronDoubleRightIcon,
-    EllipsisVerticalIcon,
 } from "@heroicons/react/16/solid";
 import { ChangeEvent, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { TableRow } from "./table-row";
 
-type Attendee = {
-    id: string;
-    createdAt: string;
-    attendee: {
-        name: string;
-        email: string;
-        hasAttended: string;
-    };
+type Event = {
+    id: number;
+    title: string;
+    details: string;
+    maxAttendees: number;
+    attendeesCount: number;
 };
 
-export function AtendeeList() {
-    const { slug } = useParams();
+export function EventsList() {
+    const [events, setEvents] = useState<Event[]>([]);
+    const [total, setTotal] = useState(0);
+    const totalPages = Math.ceil(total / 10);
 
     const [search, setSearch] = useState(() => {
         const url = new URL(window.location.toString());
@@ -43,7 +42,7 @@ export function AtendeeList() {
     });
 
     useEffect(() => {
-        const url = new URL(`http://localhost:3333/events/${slug}/attendees`);
+        const url = new URL("http://localhost:3333/events");
 
         url.searchParams.set("pageIndex", String(page - 1));
         if (search.length > 1) {
@@ -53,16 +52,20 @@ export function AtendeeList() {
         fetch(url)
             .then((response) => response.json())
             .then((data) => {
-                setEvent(data.event);
-                setAttendees(data.attendees);
+                setEvents(data.events);
                 setTotal(data.total);
             });
     }, [page, search]);
 
-    const [attendees, setAttendees] = useState<Attendee[]>([]);
-    const [event, setEvent] = useState({});
-    const [total, setTotal] = useState(0);
-    const totalPages = Math.ceil(total / 10);
+    function setCurrentPage(page: number) {
+        const url = new URL(window.location.toString());
+
+        url.searchParams.set("page", String(page));
+
+        window.history.pushState({}, "", url);
+
+        setPage(page);
+    }
 
     function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
         const url = new URL(window.location.toString());
@@ -73,16 +76,6 @@ export function AtendeeList() {
 
         setSearch(event.target.value);
         setCurrentPage(1);
-    }
-
-    function setCurrentPage(page: number) {
-        const url = new URL(window.location.toString());
-
-        url.searchParams.set("page", String(page));
-
-        window.history.pushState({}, "", url);
-
-        setPage(page);
     }
 
     function goToFirstPage() {
@@ -104,17 +97,12 @@ export function AtendeeList() {
     return (
         <div className="flex flex-col gap-3">
             <div className="flex gap-3 items-center">
-                <div>
-                    <h1>Lista de participantes para o evento {event.title}</h1>
-                    <span className="text-gray-500 text-sm font-normal">
-                        ({total} participantes)
-                    </span>
-                </div>
+                <h1>Lista de Eventos</h1>
                 <div className="px-3 w-[288px] py-1.5 border border-black/10 flex gap-1 items-center bg-transparent rounded-lg text-sm">
                     <MagnifyingGlassIcon className="h-4 w-4 text-gray-500" />
                     <input
                         className="bg-transparent w-full flex-1 outline-none gap-3"
-                        placeholder="Search attendee"
+                        placeholder="Pesquisar por evento"
                         value={search}
                         onChange={onSearchInputChanged}
                     />
@@ -124,7 +112,7 @@ export function AtendeeList() {
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-black/10">
-                            <th
+                            {/* <th
                                 style={{ width: 48 }}
                                 className="py-3 px-4 text-sm font-semibold text-left"
                             >
@@ -132,18 +120,15 @@ export function AtendeeList() {
                                     type="checkbox"
                                     className="size-4 bg-black/20 rounded border border-black/10"
                                 />
+                            </th> */}
+                            <th className="py-3 px-4 text-sm font-semibold text-left">
+                                Evento
                             </th>
                             <th className="py-3 px-4 text-sm font-semibold text-left">
-                                Código
+                                Dia
                             </th>
                             <th className="py-3 px-4 text-sm font-semibold text-left">
-                                Participante
-                            </th>
-                            <th className="py-3 px-4 text-sm font-semibold text-left">
-                                Data de inscrição
-                            </th>
-                            <th className="py-3 px-4 text-sm font-semibold text-left">
-                                Data do check-in
+                                Quantidade de Participantes
                             </th>
                             <th
                                 style={{ width: 64 }}
@@ -152,47 +137,45 @@ export function AtendeeList() {
                         </tr>
                     </thead>
                     <tbody>
-                        {attendees.map((attendee) => {
+                        {events.map((event) => {
                             return (
-                                <tr
-                                    key={attendee.id}
-                                    className="border-b border-black/10 hover:bg-black/5"
-                                >
-                                    <td className="py-3 px-4 text-sm text-zinc-300">
-                                        <input
-                                            type="checkbox"
-                                            className="size-4 bg-black/20 rounded border border-black/10"
-                                        />
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-zinc-300">
-                                        {attendee.id}
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-zinc-300">
-                                        <div className="flex flex-col gap-1">
-                                            <span className="font-semibold text-black">
-                                                {attendee.attendee.name}
-                                            </span>
-                                            <span>
-                                                {attendee.attendee.email}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-zinc-300">
-                                        {new Date(
-                                            attendee.createdAt,
-                                        ).toLocaleDateString()}
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-zinc-300">
-                                        {new Date(
-                                            attendee.attendee.hasAttended,
-                                        ).toLocaleDateString()}
-                                    </td>
-                                    <td className="py-3 px-4 text-sm text-zinc-300">
-                                        <button className="bg-black/20 border border-black/10 rounded-md p-1.5">
-                                            <EllipsisVerticalIcon className="size-4" />
-                                        </button>
-                                    </td>
-                                </tr>
+                                // <tr
+                                //     key={event.id}
+                                //     className="border-b border-black/10 hover:bg-black/5"
+                                // >
+                                //     <td className="py-3 px-4 text-sm text-zinc-300">
+                                //         <input
+                                //             type="checkbox"
+                                //             className="size-4 bg-black/20 rounded border border-black/10"
+                                //         />
+                                //     </td>
+                                //     <td className="py-3 px-4 text-sm text-zinc-300">
+                                //         {event.id}
+                                //     </td>
+                                //     <td className="py-3 px-4 text-sm text-zinc-300">
+                                //         <div className="flex flex-col gap-1">
+                                //             <span className="font-semibold text-black">
+                                //                 {event.title}
+                                //             </span>
+                                //             <span>{event.details}</span>
+                                //         </div>
+                                //     </td>
+                                //     <td className="py-3 px-4 text-sm text-zinc-300">
+                                //         2024
+                                //     </td>
+                                //     <td className="py-3 px-4 text-sm text-zinc-300">
+                                //         {
+
+                                //         }
+                                //     </td>
+                                //     <td className="py-3 px-4 text-sm text-zinc-300">
+                                //         <button className="bg-black/20 border border-black/10 rounded-md p-1.5">
+                                //             <EllipsisVerticalIcon className="size-4" />
+                                //         </button>
+                                //     </td>
+                                // </tr>
+
+                                <TableRow event={event} />
                             );
                         })}
                     </tbody>
@@ -202,7 +185,7 @@ export function AtendeeList() {
                                 className="py-3 px-4 text-sm text-zinc-300"
                                 colSpan={3}
                             >
-                                10 de {attendees.length} participantes.
+                                10 de {events.length} participantes.
                             </td>
                             <td
                                 className="py-3 px-4 text-sm text-zinc-300 text-right"
