@@ -8,14 +8,16 @@ import {
 } from "@heroicons/react/16/solid";
 import { ChangeEvent, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { CreateAttendeeDialog } from "./create-attendee-dialog";
+import { Event } from "../@types/Event";
 
 type Attendee = {
     id: string;
     createdAt: string;
+    hasAttended: string;
     attendee: {
         name: string;
         email: string;
-        hasAttended: string;
     };
 };
 
@@ -43,6 +45,10 @@ export function AtendeeList() {
     });
 
     useEffect(() => {
+        fetchAtendees();
+    }, [page, search]);
+
+    async function fetchAtendees() {
         const url = new URL(`http://localhost:3333/events/${slug}/attendees`);
 
         url.searchParams.set("pageIndex", String(page - 1));
@@ -50,19 +56,21 @@ export function AtendeeList() {
             url.searchParams.set("query", search);
         }
 
-        fetch(url)
-            .then((response) => response.json())
+        await fetch(url)
+            .then(async (response) => await response.json())
             .then((data) => {
                 setEvent(data.event);
                 setAttendees(data.attendees);
                 setTotal(data.total);
             });
-    }, [page, search]);
+    }
 
     const [attendees, setAttendees] = useState<Attendee[]>([]);
-    const [event, setEvent] = useState({});
+    const [event, setEvent] = useState<Event>({});
     const [total, setTotal] = useState(0);
     const totalPages = Math.ceil(total / 10);
+
+    console.log(attendees, total);
 
     function onSearchInputChanged(event: ChangeEvent<HTMLInputElement>) {
         const url = new URL(window.location.toString());
@@ -103,20 +111,26 @@ export function AtendeeList() {
 
     return (
         <div className="flex flex-col gap-3">
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3 flex-col">
                 <div>
                     <h1>Lista de participantes para o evento {event.title}</h1>
                     <span className="text-gray-500 text-sm font-normal">
                         ({total} participantes)
                     </span>
                 </div>
-                <div className="px-3 w-[288px] py-1.5 border border-black/10 flex gap-1 items-center bg-transparent rounded-lg text-sm">
-                    <MagnifyingGlassIcon className="h-4 w-4 text-gray-500" />
-                    <input
-                        className="bg-transparent w-full flex-1 outline-none gap-3"
-                        placeholder="Search attendee"
-                        value={search}
-                        onChange={onSearchInputChanged}
+                <div className="mt-4 w-full flex justify-between">
+                    <div className="px-3 w-[288px] py-1.5 border border-black/10 flex gap-1 items-center rounded-lg text-sm">
+                        <MagnifyingGlassIcon className="h-4 w-4 text-gray-500" />
+                        <input
+                            className="bg-transparent w-full flex-1 outline-none gap-3"
+                            placeholder="Search attendee"
+                            value={search}
+                            onChange={onSearchInputChanged}
+                        />
+                    </div>
+                    <CreateAttendeeDialog
+                        attendeesCount={total}
+                        maxAttendees={event.maxAttendees}
                     />
                 </div>
             </div>
@@ -180,12 +194,22 @@ export function AtendeeList() {
                                     <td className="py-3 px-4 text-sm text-zinc-300">
                                         {new Date(
                                             attendee.createdAt,
-                                        ).toLocaleDateString()}
+                                        ).toLocaleDateString("pt-PT", {
+                                            day: "numeric",
+                                            month: "long",
+                                            year: "numeric",
+                                        })}
                                     </td>
                                     <td className="py-3 px-4 text-sm text-zinc-300">
-                                        {new Date(
-                                            attendee.attendee.hasAttended,
-                                        ).toLocaleDateString()}
+                                        {attendee.hasAttended
+                                            ? new Date(
+                                                  attendee.hasAttended,
+                                              ).toLocaleDateString("pt-PT", {
+                                                  day: "numeric",
+                                                  month: "long",
+                                                  year: "numeric",
+                                              })
+                                            : "Não fez check-in"}
                                     </td>
                                     <td className="py-3 px-4 text-sm text-zinc-300">
                                         <button className="bg-black/20 border border-black/10 rounded-md p-1.5">
@@ -202,7 +226,7 @@ export function AtendeeList() {
                                 className="py-3 px-4 text-sm text-zinc-300"
                                 colSpan={3}
                             >
-                                10 de {attendees.length} participantes.
+                                {attendees.length} de {total} participantes.
                             </td>
                             <td
                                 className="py-3 px-4 text-sm text-zinc-300 text-right"

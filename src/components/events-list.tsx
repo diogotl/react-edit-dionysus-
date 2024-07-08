@@ -7,14 +7,7 @@ import {
 } from "@heroicons/react/16/solid";
 import { ChangeEvent, useEffect, useState } from "react";
 import { TableRow } from "./table-row";
-
-type Event = {
-    id: number;
-    title: string;
-    details: string;
-    maxAttendees: number;
-    attendeesCount: number;
-};
+import { CreateEventDialog } from "./create-event-dialog";
 
 export function EventsList() {
     const [events, setEvents] = useState<Event[]>([]);
@@ -96,31 +89,26 @@ export function EventsList() {
 
     return (
         <div className="flex flex-col gap-3">
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-3 flex-col items-center">
                 <h1>Lista de Eventos</h1>
-                <div className="px-3 w-[288px] py-1.5 border border-black/10 flex gap-1 items-center bg-transparent rounded-lg text-sm">
-                    <MagnifyingGlassIcon className="h-4 w-4 text-gray-500" />
-                    <input
-                        className="bg-transparent w-full flex-1 outline-none gap-3"
-                        placeholder="Pesquisar por evento"
-                        value={search}
-                        onChange={onSearchInputChanged}
-                    />
+                <div className="w-full mt-4 justify-between flex">
+                    <div className="px-3 w-[288px] py-1.5 border border-black/10 flex gap-1 items-center bg-transparent rounded-lg text-sm">
+                        <MagnifyingGlassIcon className="h-4 w-4 text-gray-500" />
+                        <input
+                            className="bg-transparent w-full flex-1 outline-none gap-3"
+                            placeholder="Pesquisar por evento"
+                            value={search}
+                            onChange={onSearchInputChanged}
+                        />
+                    </div>
+
+                    <CreateEventDialog events={events} setEvents={setEvents} />
                 </div>
             </div>
             <div className="border border-black/10 rounded-lg">
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-black/10">
-                            {/* <th
-                                style={{ width: 48 }}
-                                className="py-3 px-4 text-sm font-semibold text-left"
-                            >
-                                <input
-                                    type="checkbox"
-                                    className="size-4 bg-black/20 rounded border border-black/10"
-                                />
-                            </th> */}
                             <th className="py-3 px-4 text-sm font-semibold text-left">
                                 Evento
                             </th>

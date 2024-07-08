@@ -1,4 +1,3 @@
-import { EllipsisVerticalIcon } from "@heroicons/react/16/solid";
 import { UserGroupIcon } from "@heroicons/react/24/solid";
 import { Link } from "react-router-dom";
 
@@ -90,7 +89,7 @@ export function TableRow(props: TableRowProps) {
             <td className="py-3 px-4 text-sm text-zinc-300">
                 <Link to={`/events/${props.event.slug}/attendees`}>
                     <button
-                        disabled={available === "soldOut"}
+                        // disabled={available === "soldOut"}
                         className="bg-blue-600 text-white border border-black/10 rounded-md p-1.5 disabled:bg-black/10 disabled:text-gray-500"
                     >
                         <UserGroupIcon className="size-4" />
